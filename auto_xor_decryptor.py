@@ -1,12 +1,24 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from itertools import groupby
+from operator import itemgetter
+import binascii
+import re
+import struct 
+import argparse
+import os
+
+'''
 ##     ## ########   ######      ######## ######## ######## #### ########    ###     ######  
 ###   ### ##     ## ##    ##     ##       ##       ##        ##     ##      ## ##   ##    ## 
 #### #### ##     ## ##           ##       ##       ##        ##     ##     ##   ##  ##       
 ## ### ## ########  ##   ####    ######   ######   ######    ##     ##    ##     ##  ######  
 ##     ## ##   ##   ##    ##     ##       ##       ##        ##     ##    #########       ## 
 ##     ## ##    ##  ##    ##     ##       ##       ##        ##     ##    ##     ## ##    ## 
-##     ## ##     ##  ######      ######## ##       ##       ####    ##    ##     ##  ######  
+##     ## ##     ##  ######      ######## ##       ##       ####    ##    ##     ##  ###### 
+'''
 
 '''
     This program is free software: you can redistribute it and/or modify
@@ -22,16 +34,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
-from __future__ import print_function
-from __future__ import unicode_literals
-from itertools import groupby
-from operator import itemgetter
-import binascii
-import re
-import struct 
-import argparse
-import os
 
 print ("Auto XOR decryptor by MRG Effitas. Developed and tested on Python 3.3!") 
 print ("")
@@ -56,13 +58,13 @@ parser.add_argument("--offset", action="store", dest="offset", required=False,
                     help="offset to rotate the xor key")
 
 parser.add_argument("--keyminlen", action="store", dest="keyminlen", required=False,
-                    default="4", help="minimum key length (measured in hex string), default 2")
+                    default="2", help="minimum key length (measured in hex string), default 2")
 
 parser.add_argument("--patternmaxsearch", action="store", dest="patternmaxsearch", required=False,
                     default="500", help="max length to search for pattern in the result, default 500")
 
 parser.add_argument("--xorkeymaxsearch", action="store", dest="xorkeymaxsearch", required=False,
-                    default="2", help="max distance to search for XOR key in the encrypted file, default 500")
+                    default="500", help="max distance to search for XOR key in the encrypted file, default 500")
 
 
 parser.add_argument("--pattern", action="store", dest="pattern", required=False
@@ -215,12 +217,13 @@ def cipher(infile, outfile, padfile):
 filename = args.input
 # only guess the XOR key based on the first 500 (or whatever you defined) bytes
 with open(filename, 'rb') as f:
-    content = f.read(args.xorkeymaxsearch)
+    content = f.read(int(args.xorkeymaxsearch))
+    #print (args.xorkeymaxsearch)
 f.close()
 
 try:
     xor_key
-# if we don't have the final xor_key    
+# if we don't have the final xor_key from the user 
 except NameError:   
     try:
         xor_key_ascii
@@ -228,10 +231,11 @@ except NameError:
         xor_key = binascii.hexlify(xor_key_ascii.encode('ascii'))
         # xor_key = ''.join(long_xor_key[i:i + 2] 
         #                for i in range(0, len(long_xor_key), 2))
-        print (xor_key)                
+        #print (xor_key)                
     except NameError: 
         # when the user have not provided any guess about the XOR key  
         long_xor_key = str(longest_common_substring(binascii.hexlify(content)))
+        #print ("longxorkey: " +  long_xor_key)
         formatted_hex = ''.join(long_xor_key[i:i + 2] for i in range(0,
                         len(long_xor_key), 2))
         print ("XOR key: " + formatted_hex)
@@ -270,7 +274,7 @@ d.close()
 
 # Test whether decryption was successful, only check first 500 bytes.
 filehandle = open (output, 'rb+')
-data = filehandle.read (args.patternmaxsearch) 
+data = filehandle.read (int(args.patternmaxsearch)) 
 filehandle.close ()
 pattern = args.pattern
 rx = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
