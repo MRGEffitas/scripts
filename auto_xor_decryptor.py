@@ -9,6 +9,7 @@ import re
 import struct 
 import argparse
 import os
+import sys
 
 '''
 ##     ## ########   ######      ######## ######## ######## #### ########    ###     ######  
@@ -234,19 +235,18 @@ except NameError:
         #print (xor_key)                
     except NameError: 
         # when the user have not provided any guess about the XOR key  
-        long_xor_key = str(longest_common_substring(binascii.hexlify(content)))
-        #print ("longxorkey: " +  long_xor_key)
+        long_xor_key = str(longest_common_substring(content))
+        print ("longxorkey: " +  long_xor_key)
         formatted_hex = ''.join(long_xor_key[i:i + 2] for i in range(0,
                         len(long_xor_key), 2))
         print ("XOR key: " + formatted_hex)
         r = re.compile("(.{" + args.keyminlen + r",}?)\1+")             
         xor_key_list = r.findall(formatted_hex)
         xor_key = xor_key_list[0] 
-#print (xor_key)    
+    
 # binary XOR key to be used in decryption
-xor_key_bin = binascii.unhexlify(xor_key)
+xor_key_bin = xor_key
 print ("XOR key ascii: " + str(xor_key_bin))
-print ("XOR key hex: " + str(binascii.hexlify(xor_key_bin)))
 data = open (filename, 'rb+')
 edit = data.read () 
 data.close ()
@@ -255,7 +255,9 @@ try:
     offset
 except NameError:
     # when the user have not provided any offset, try to guess it
-    offset = len(xor_key_bin) - (edit.find (xor_key_bin) % len(xor_key_bin))
+    print(len(xor_key_bin))
+    print(edit.find (xor_key_bin.encode('utf-8')))
+    offset = len(xor_key_bin) - (edit.find (xor_key_bin.encode('utf-8')) % len(xor_key_bin))
 print ("Offset: " + str(offset))
 
 def rotate(str1, n):
@@ -263,7 +265,7 @@ def rotate(str1, n):
     return rotated
 
 # generate the final XOR key, rotate the xor_key with the offset
-final_xor_key = binascii.unhexlify(rotate(xor_key, offset * 2))
+final_xor_key = rotate(xor_key, offset).encode('utf-8')
 print("Final XOR key: " + str(final_xor_key))
 with open(output, 'wb') as d:
     with open(filename, 'rb') as f:
@@ -278,7 +280,7 @@ data = filehandle.read (int(args.patternmaxsearch))
 filehandle.close ()
 pattern = args.pattern
 rx = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
-result = rx.findall(data)
+result = rx.findall(data) 
 if not result:
     print ("Decrypt failed, or check your pattern. Output destination file has been deleted.")
     os.remove(output)
