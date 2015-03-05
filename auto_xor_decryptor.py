@@ -255,8 +255,6 @@ try:
     offset
 except NameError:
     # when the user have not provided any offset, try to guess it
-    print(len(xor_key_bin))
-    print(edit.find (xor_key_bin.encode('utf-8')))
     offset = len(xor_key_bin) - (edit.find (xor_key_bin.encode('utf-8')) % len(xor_key_bin))
 print ("Offset: " + str(offset))
 
