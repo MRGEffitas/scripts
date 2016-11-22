@@ -11,6 +11,14 @@ import argparse
 import os
 import sys
 
+
+req_version = (3,3)
+cur_version = sys.version_info
+
+if cur_version < req_version:
+    print ("Python 3.3 required. Exiting.")
+    exit()
+
 '''
 ##     ## ########   ######      ######## ######## ######## #### ########    ###     ######  
 ###   ### ##     ## ##    ##     ##       ##       ##        ##     ##      ## ##   ##    ## 
